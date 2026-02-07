@@ -216,6 +216,7 @@ export function ValentinePage() {
 
                         {/* Background Music */}
                         <BackgroundMusic
+                            key="accepted-music"
                             trackId={invite.music_track_id}
                             startSec={invite.music_start_sec}
                             endSec={invite.music_end_sec}
@@ -265,6 +266,7 @@ export function ValentinePage() {
 
                     {/* Background Music */}
                     <BackgroundMusic
+                        key="pending-music"
                         trackId={invite.music_track_id}
                         startSec={invite.music_start_sec}
                         endSec={invite.music_end_sec}
