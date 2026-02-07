@@ -26,7 +26,8 @@ export function BackgroundMusic({
     }
 
     const playerRef = useRef<any>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const playerContainerId = useRef<string>(`yt-player-${Math.random().toString(36).substr(2, 9)}`);
     const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
@@ -38,10 +39,26 @@ export function BackgroundMusic({
             firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
         }
 
-        const initPlayer = () => {
-            if (!containerRef.current) return;
+        // Create the player container dynamically
+        const createPlayerContainer = () => {
+            if (!wrapperRef.current) return null;
 
-            playerRef.current = new window.YT.Player(containerRef.current, {
+            // Clear any existing content
+            wrapperRef.current.innerHTML = '';
+
+            // Create a new div for the player
+            const playerDiv = document.createElement('div');
+            playerDiv.id = playerContainerId.current;
+            wrapperRef.current.appendChild(playerDiv);
+
+            return playerDiv.id;
+        };
+
+        const initPlayer = () => {
+            const containerId = createPlayerContainer();
+            if (!containerId) return;
+
+            playerRef.current = new window.YT.Player(containerId, {
                 videoId: trackId,
                 playerVars: {
                     autoplay: autoplay ? 1 : 0,
@@ -52,7 +69,7 @@ export function BackgroundMusic({
                     rel: 0,
                     start: startSec,
                     end: endSec,
-                    loop: 0, // We handle loop ourselves
+                    loop: 0,
                     playsinline: 1,
                 },
                 events: {
@@ -60,11 +77,9 @@ export function BackgroundMusic({
                         if (autoplay) {
                             event.target.playVideo();
                         }
-                        // Start checking for loop
                         startLoopCheck();
                     },
                     onStateChange: (event: any) => {
-                        // When video ends, restart from startSec
                         if (event.data === window.YT.PlayerState.ENDED) {
                             event.target.seekTo(startSec);
                             event.target.playVideo();
@@ -75,7 +90,6 @@ export function BackgroundMusic({
         };
 
         const startLoopCheck = () => {
-            // Check every 500ms if we've passed endSec
             if (checkIntervalRef.current) {
                 clearInterval(checkIntervalRef.current);
             }
@@ -99,20 +113,36 @@ export function BackgroundMusic({
         }
 
         return () => {
+            // Clean up interval
             if (checkIntervalRef.current) {
                 clearInterval(checkIntervalRef.current);
+                checkIntervalRef.current = null;
             }
-            if (playerRef.current && playerRef.current.destroy) {
-                playerRef.current.destroy();
+
+            // Destroy player safely
+            if (playerRef.current) {
+                try {
+                    if (playerRef.current.destroy) {
+                        playerRef.current.destroy();
+                    }
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+                playerRef.current = null;
+            }
+
+            // Manually clear the wrapper content to prevent React DOM conflicts
+            if (wrapperRef.current) {
+                wrapperRef.current.innerHTML = '';
             }
         };
     }, [trackId, startSec, endSec, autoplay]);
 
     return (
         <>
-            {/* Hidden YouTube player for background audio */}
+            {/* Wrapper div that React manages - player container is created inside dynamically */}
             <div
-                ref={containerRef}
+                ref={wrapperRef}
                 className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
                 aria-hidden="true"
             />
