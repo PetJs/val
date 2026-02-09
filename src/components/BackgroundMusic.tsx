@@ -5,6 +5,7 @@ interface BackgroundMusicProps {
     startSec?: number;
     endSec?: number;
     autoplay?: boolean;
+    volume?: number; // 0-100
 }
 
 declare global {
@@ -19,6 +20,7 @@ export function BackgroundMusic({
     startSec = 0,
     endSec,
     autoplay = true,
+    volume = 100,
 }: BackgroundMusicProps) {
     // Guard: Don't render if no valid trackId
     if (!trackId) {
@@ -137,6 +139,13 @@ export function BackgroundMusic({
             }
         };
     }, [trackId, startSec, endSec, autoplay]);
+
+    // Update volume when prop changes
+    useEffect(() => {
+        if (playerRef.current && playerRef.current.setVolume) {
+            playerRef.current.setVolume(volume);
+        }
+    }, [volume]);
 
     return (
         <>

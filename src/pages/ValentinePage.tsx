@@ -20,6 +20,7 @@ export function ValentinePage() {
     const [isAccepting, setIsAccepting] = useState(false);
     const [isDeclining, setIsDeclining] = useState(false);
     const [showDeclineModal, setShowDeclineModal] = useState(false);
+    const [isVoiceNotePlaying, setIsVoiceNotePlaying] = useState(false);
 
     useEffect(() => {
         if (!token) return;
@@ -210,7 +211,14 @@ export function ValentinePage() {
                         {invite.vn_url && (
                             <div className="mb-6">
                                 <h3 className="font-semibold text-gray-700 mb-3">Put Your Headphones In... 🎧💋</h3>
-                                <audio src={invite.vn_url} controls className="w-full" />
+                                <audio
+                                    src={invite.vn_url}
+                                    controls
+                                    className="w-full"
+                                    onPlay={() => setIsVoiceNotePlaying(true)}
+                                    onPause={() => setIsVoiceNotePlaying(false)}
+                                    onEnded={() => setIsVoiceNotePlaying(false)}
+                                />
                             </div>
                         )}
 
@@ -221,6 +229,7 @@ export function ValentinePage() {
                             startSec={invite.music_start_sec}
                             endSec={invite.music_end_sec}
                             autoplay={true}
+                            volume={isVoiceNotePlaying ? 15 : 100}
                         />
 
                         {/* Meetup Details */}
